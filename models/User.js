@@ -1,44 +1,6 @@
 const mongoose = require("mongoose"); // Add this line
 const bcrypt = require("bcryptjs");
 
-// const userSchema = new mongoose.Schema({
-//   name: {
-//     type: String,
-//     required: true,
-//     trim: true,
-//   },
-//   email: {
-//     type: String,
-//     required: true,
-//     unique: true,
-//     lowercase: true,
-//   },
-//   password: {
-//     type: String,
-//     required: true,
-//     minlength: 6,
-//   },
-//   role: {
-//     type: String,
-//     enum: ['user', 'admin'],
-//     default: 'user',
-//   },
-//   tokens: [
-//     {
-//       token: {
-//         type: String,
-//         required: true,
-//       },
-//     },
-//   ],
-//   verifyToken:{
-//     type: String,
-//   }
-
-// }, { timestamps: true });
-
-// Password hashing middleware
-
 const userSchema = new mongoose.Schema(
   {
     name: {

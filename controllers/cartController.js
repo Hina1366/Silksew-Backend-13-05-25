@@ -7,10 +7,11 @@ const User = require('../models/User');
 // Add item to cart
 const addItemToCart = async (req, res) => {
   try {
-    console.log(req.body);
-    
+  
     const { productId, size,color, quantity = 1} = req.body;
     const userId = req.user._id;
+
+    console.log(req.body);
 
     // Validate productId and quantity
     if (!mongoose.Types.ObjectId.isValid(productId) || quantity < 1) {
@@ -19,6 +20,8 @@ const addItemToCart = async (req, res) => {
 
     // Check if product exists
     const product = await Product.findById(productId);
+    
+    console.log("###########",product)
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
@@ -57,7 +60,7 @@ const addItemToCart = async (req, res) => {
 const getUserCart = async (req, res) => {
   try {
     // const {userId} = req.body
-    const userId = req.user._id;
+    const userId = req?.user?._id;
     console.log(userId)
     if(!userId){
       return res.status(404).json({ message: 'user is not found' });
@@ -157,8 +160,6 @@ const getProductsByIds = async (req, res) => {
     return res.status(500).json({ error: "Server error while fetching products" });
   }
 };
-
-
 
 module.exports = {
   addItemToCart,

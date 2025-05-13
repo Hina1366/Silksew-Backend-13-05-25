@@ -3,32 +3,6 @@ const jwt = require('jsonwebtoken');
 const nodemailer = require("nodemailer");
 var bcrypt = require("bcryptjs");
 
-// Register a new user
-// const registerUser = async (req, res) => {
-//   try {
-//     const { name, email, password } = req.body;
-
-//     // Validate required fields
-//     if (!name || !email || !password) {
-//       return res.status(400).json({ message: 'All fields are required' });
-//     }
-
-//     // Check if the user already exists
-//     const existingUser = await User.findOne({ email });
-//     if (existingUser) {
-//       return res.status(400).json({ message: 'User already exists' });
-//     }
-
-//     // Create and save a new user
-//     const newUser = new User({ name, email, password });
-//     await newUser.save();
-
-//     res.status(201).json({ message: 'User registered successfully' });
-//   } catch (error) {
-//     res.status(500).json({ message: 'Error registering user', error: error.message });
-//   }
-// };
-
 // for signup
 const registerUser = async (req, res) => {
   try {
@@ -64,7 +38,6 @@ const registerUser = async (req, res) => {
     res.status(500).json({ message: 'Error registering user', error: error.message });
   }
 };
-
 
 // Login a user
 const loginUser = async (req, res) => {
@@ -147,9 +120,7 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
-
 //  email config
-
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -203,7 +174,6 @@ const resetPassword = async (req, res) => {
 }
 
 // verify user for forgot password time
-
 const forgotPassword = async (req, res) => {
   const { id, token } = req.params;
 
@@ -222,7 +192,6 @@ const forgotPassword = async (req, res) => {
 }
 
 // change password
-
 const changePassword = async (req, res) => {
   const { id, token } = req.params;
 
@@ -251,9 +220,9 @@ const changePassword = async (req, res) => {
 // user profile details fetch
 const getUserProfileDetail = async (req, res) => {
   try {
-    const userProfile = await User.findById(req.user.id); // Find user by _id
+    const userProfile = await User.findById(req?.user?.id); // Find user by _id
 
-    console.log(req.user.id)
+    console.log(userProfile)
 
     if (!userProfile) {
       return res.status(404).json({ message: "User not found" });
@@ -286,8 +255,5 @@ const updateUserProfileDetail = async (req, res) => {
     res.status(500).json({ message: "Error updating profile", error: error.message });
   }
 };
-
-
-
 
 module.exports = { registerUser, loginUser, getUserProfile, updateUserProfile, changePassword, forgotPassword, resetPassword,getUserProfileDetail,updateUserProfileDetail};

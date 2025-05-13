@@ -1,9 +1,6 @@
 const asyncHandler = require("express-async-handler")
 const Issue = require("../models/issueModel")
 
-// @desc    Get all issues with pagination
-// @route   GET /api/issues
-// @access  Private
 exports.getIssues = asyncHandler(async (req, res) => {
   const pageSize = 5
   const page = Number(req.query.page) || 1
@@ -22,9 +19,6 @@ exports.getIssues = asyncHandler(async (req, res) => {
   })
 })
 
-// @desc    Get single issue
-// @route   GET /api/issues/:id
-// @access  Private
 exports.getIssueById = asyncHandler(async (req, res) => {
   const issue = await Issue.findById(req.params.id)
   if (issue) {
@@ -35,9 +29,6 @@ exports.getIssueById = asyncHandler(async (req, res) => {
   }
 })
 
-// @desc    Create new issue
-// @route   POST /api/issues
-// @access  Private
 exports.createIssue = asyncHandler(async (req, res) => {
   const { recipientId, recipientName, issue, related } = req.body
 
@@ -52,9 +43,6 @@ exports.createIssue = asyncHandler(async (req, res) => {
   res.status(201).json(newIssue)
 })
 
-// @desc    Update issue status
-// @route   PUT /api/issues/:id/status
-// @access  Private
 exports.updateIssueStatus = asyncHandler(async (req, res) => {
   const issue = await Issue.findById(req.params.id)
 

@@ -1,4 +1,5 @@
 const Order = require("../models/Order");
+const Offer = require("../models/offer");
 const Cart = require("../models/Cart");
 require("dotenv").config(); // Load .env file
 const User = require("../models/User");
@@ -107,10 +108,9 @@ const getAllOrders = async (req, res) => {
 
 const placeOrder = async (req, res) => {
   try {
-    const { items, totalAmount, address, paymentMethod } = req.body;
+    const { items, totalAmount, address, paymentMethod, offerCode } = req.body;
     const userId = req.user?._id;
 
-    // Validate required fields
     if (
       !userId ||
       !items ||
@@ -120,38 +120,61 @@ const placeOrder = async (req, res) => {
       !address ||
       !paymentMethod
     ) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message:
-            "All fields are required and items must be a non-empty array.",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required and items must be a non-empty array.",
+      });
     }
 
-    // Fetch user details
     const user = await User.findById(userId);
     if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Apply offer if offerCode is provided
+    let discountAmount = 0;
+    let finalAmount = totalAmount;
+    if (offerCode) {
+      const offer = await Offer.findOne({ code: offerCode });
+
+      if (
+        offer &&
+        offer.active &&
+        offer.startDate <= new Date() &&
+        offer.endDate >= new Date()
+      ) {
+        if (offer.offerType === "percentage") {
+          discountAmount = (totalAmount * offer.value) / 100;
+        } else if (offer.offerType === "flat") {
+          discountAmount = offer.value;
+        }
+
+        finalAmount = totalAmount - discountAmount;
+
+        // Optional: Save the last used discount
+        offer.lastUsedAmount = finalAmount;
+        await offer.save();
+        console.log("offer",offer)
+      } else {
+        return res.status(400).json({ success: false, message: "Invalid or expired offer code" });
+      }
     }
 
     // Create a new order
     const newOrder = new Order({
       userId,
       items,
-      totalAmount,
+      totalAmount: finalAmount,
       address,
       paymentMethod,
+      discountAmount,
       payment: false,
       date: new Date(),
+      offerCode: offerCode || null, // save offerCode for record if any
     });
 
-    // Save order to database
     await newOrder.save();
 
-    // Send confirmation email with corrected item properties
     await sendOrderConfirmationEmail(
       user.email,
       items.map((item) => ({
@@ -159,18 +182,19 @@ const placeOrder = async (req, res) => {
         quantity: item.quantity,
         price: item.price,
       })),
-      totalAmount,
-      address // Add this line
+      finalAmount,
+      address
     );
 
     res.status(201).json({
       success: true,
       message: "Order placed successfully",
       order: newOrder,
-      userEmail: user.email, // Ensure frontend gets the email
+      discountAmount,
+      userEmail: user.email,
     });
   } catch (error) {
-    console.error(" Order placement error:", error);
+    console.error("Order placement error:", error);
     res.status(500).json({
       success: false,
       message: "Internal Server Error",
@@ -356,67 +380,14 @@ const saveReturnReason = async (req, res) => {
   }
 };
 
-// const getReturnOrder = async (req, res) => {
-//   try {
-//     // Fetch orders where returnRequested is true in items
-//     const orders = await Order.find({ "items.returnRequested": true })
-//       .populate("userId", "firstName lastName email") // Populating userId with firstName, lastName, and email
-//       .populate("items.productId", "name"); // Populating productId with name
-//     console.log("orders", orders);
-
-//     // If no orders found
-//     if (!orders.length) {
-//       return res.status(404).json({ message: "No return requests found" });
-//     }
-
-//     // Format the fetched orders
-//     const formattedOrders = orders.flatMap((order) =>
-//       order.items
-//         .filter((item) => item.returnRequested)
-//         .map((returnItem) => {
-//           const productName = returnItem.productId
-//             ? returnItem.productId.name
-//             : "Unknown Product";
-
-//           return {
-//             _id: order._id,
-//             productName: productName,
-//             productId: returnItem.productId._id,
-//             firstName: order.userId ? order.userId.firstName : "Unknown", // Accessing firstName from populated userId
-//             lastName: order.userId ? order.userId.lastName : "Unknown", // Accessing lastName from populated userId
-//             email: order.userId ? order.userId.email : "Unknown", // Accessing email from populated userId
-//             street: order.address ? order.address.street : "Unknown",
-//             landmark: order.address ? order.address.landmark : "Unknown",
-//             city: order.address ? order.address.city : "Unknown",
-//             zipcode: order.address ? order.address.zipcode : "Unknown",
-//             country: order.address ? order.address.country : "Unknown",
-//             state: order.address ? order.address.state : "Unknown",
-//             phone: order.address ? order.address.phone : "Unknown",
-//             totalAmount: order.totalAmount,
-//             paymentMethod: order.paymentMethod,
-//             returnReason: returnItem.returnReason || "N/A",
-//             status: returnItem.returnApproved
-//               ? "Return Approved"
-//               : "Return Requested",
-//           };
-//         })
-//     );
-
-//     res.status(200).json(formattedOrders);
-//   } catch (error) {
-//     console.error("Error in getReturnOrder:", error);
-//     res.status(500).json({ message: "Server error", error: error.message });
-//   }
-// };
-
-
 const getReturnOrder = async (req, res) => {
   try {
     // Fetch orders where returnRequested is true in items
     const orders = await Order.find({ "items.returnRequested": true })
       .populate("userId", "firstName lastName email")
-      .populate("items.productId", "name")
+    // .populate("items.productId", "name")
 
+    console.log("order id---", orders)
     // If no orders found
     if (!orders.length) {
       return res.status(404).json({ message: "No return requests found" })
@@ -457,6 +428,7 @@ const getReturnOrder = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message })
   }
 }
+
 const updateReturnStatus = async (req, res) => {
   try {
     const { orderId, productId } = req.params;

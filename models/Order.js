@@ -1,21 +1,5 @@
 const mongoose = require("mongoose")
 
-// const orderSchema = new mongoose.Schema(
-//   {
-//     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-//     items: { type: Object, required: false },
-//     totalAmount: { type: Number, required: false },
-//     paymentMethod: { type: String, required: false, enum: ["Credit Card", "Debit Card", "PayPal", "Cash on Delivery"] },
-//     address: { type: Object, required: false },
-//     status: { type: String, default: "Pending" },
-//     payment: { type: Boolean, required: false, default: false },
-//     date: { type: Date, default: Date.now },
-//     tentativeDeliveryDate: { type: Date, required: false }, // New field added
-//   },
-//   { timestamps: false },
-// )
-
-
 const orderSchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -35,6 +19,8 @@ const orderSchema = new mongoose.Schema(
       },
     ],
     totalAmount: { type: Number, required: true },
+    discountAmount: Number,
+    finalAmount: Number,
     paymentMethod: { type: String, required: false, enum: ["Credit Card", "Debit Card", "PayPal", "Cash on Delivery"] },
     address: { type: Object, required: true },
     status: { type: String, default: "Pending" },

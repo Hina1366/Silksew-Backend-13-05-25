@@ -21,6 +21,11 @@ const changePasswordRoutes = require("./routes/userRoutes")
 const updatePaymentStatus = require("./routes/orderRoutes")
 const updateOrderStatus = require("./routes/orderRoutes")
 
+const offerRoutes = require('./routes/offerRoutes')
+
+
+
+
 
 // Load environment variables
 dotenv.config()
@@ -58,6 +63,7 @@ app.use("/api/updatePayment", updatePaymentStatus)
 
 app.use('/api/userProfileDetail', userRoutes)
 app.use('/api/updateUserProfileDetail', userRoutes)
+app.use("/api/offer",offerRoutes);
 
 // Default route for root endpoint
 app.get("/", (req, res) => {

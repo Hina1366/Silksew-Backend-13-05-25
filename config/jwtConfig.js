@@ -1,4 +1,4 @@
-// config/jwtConfig.js
+
 
 module.exports = {
   secret: process.env.JWT_SECRET || 'supersecretkey',
